@@ -36,7 +36,7 @@ class Table:
         """
         assert len(filter_list) == len(self.columns), "filter_list must have the same length as columns"
         filtered_rows = [row for row in self.rows if all(
-            filter_val is None or row_val == filter_val for row_val, filter_val in zip(row.values, filter_list))]
+            filter_val is None or str(row_val) == str(filter_val) for row_val, filter_val in zip(row.values, filter_list))]
 
         return filtered_rows
 
