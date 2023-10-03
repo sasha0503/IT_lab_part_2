@@ -10,7 +10,7 @@
         <h2>Search</h2>
         {% for column in columns %}
         <label>{{ column.name }}:</label>
-        <input type="text" name="{{ column.name }}">
+        <input type="text" name="{{ column.name }}" value="{{ request.form[column.name] }}">
         <br>
         {% endfor %}
         <input type="submit" value="Search">
