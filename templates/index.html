@@ -1,0 +1,144 @@
+<!-- templates/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ db_name }}</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        .table-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .table-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            transition: box-shadow 0.3s;
+        }
+
+        .table-item:hover {
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-link {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Tables of "{{ db_name }}"</h1>
+
+    <ul class="list-group">
+        {% for table_name in tables %}
+            <li class="table-item d-flex justify-content-between align-items-center">
+                <a class="table-link" href="{{ url_for('get_table', table_name=table_name) }}">{{ table_name }}</a>
+                <button class="btn btn-danger delete-button" data-table-name="{{ table_name }}">Delete</button>
+            </li>
+        {% endfor %}
+        <div class="mt-4">
+            <div class="form-group">
+                <input type="text" class="form-control" id="newTableName" placeholder="Enter table name">
+            </div>
+            <button class="btn btn-primary add-table-button">Add Table</button>
+        </div>
+    </ul>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Add a click event listener to each delete button
+        document.querySelectorAll('.delete-button').forEach(function (button) {
+            button.addEventListener('click', function () {
+                // Get the table name from the data attribute
+                var tableName = this.getAttribute('data-table-name');
+
+                // Make a DELETE request using fetch API
+                fetch('/del_table/' + tableName, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                        // Add any additional headers if needed
+                    },
+                })
+                .then(function (response) {
+                    // Handle the response (you can customize this part)
+                    if (response.ok) {
+                        // Optionally, update the UI or provide feedback to the user
+                        console.log('Table deleted successfully');
+                        // Reload the page to reflect changes (you can update the UI dynamically instead)
+                        location.reload();
+                    } else {
+                        console.error('Failed to delete table');
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+            // Delete button click event listener (similar to previous code)
+
+            // Add Table button click event listener
+            document.querySelector('.add-table-button').addEventListener('click', function () {
+                // Get the new table name from the input
+                var newTableName = document.getElementById('newTableName').value;
+
+                // Check if the table name already exists
+                var existingTableNames = Array.from(document.querySelectorAll('.table-link')).map(function(link) {
+                    return link.textContent.trim();
+                });
+
+                if (existingTableNames.includes(newTableName)) {
+                    alert('Table name already exists. Please choose a different name.');
+                    return;
+                }
+
+                // Make a request to the add_table endpoint using fetch API
+                fetch('/add_table/' + newTableName, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                        // Add any additional headers if needed
+                    },
+                })
+                .then(function (response) {
+                    // Handle the response (you can customize this part)
+                    if (response.ok) {
+                        // Optionally, update the UI or provide feedback to the user
+                        console.log('Table added successfully');
+                        // Reload the page to reflect changes (you can update the UI dynamically instead)
+                        location.reload();
+                    } else {
+                        console.error('Failed to add table');
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+            });
+        });
+</script>
+</body>
+</html>

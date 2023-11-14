@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ table_name }} edit</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+</head>
+<body>
+<a class="btn btn-primary ml-4 mt-4" href="{{ url_for('get_table', table_name=table_name) }}"> Back </a>
+<div class="container mt-4" id="container">
+
+    <h1>Table "{{ table_name }}"</h1>
+    <table id="editTable">
+        <!-- Table headers will be added dynamically using JavaScript -->
+    </table>
+    <button type="button" class="btn btn-success mt-4" onclick="saveRows()">Save</button>
+</div>
+<script>
+  // Accessing Flask variables in JavaScript
+  const columns = {{ columns|tojson|safe }};
+  const existingRows = {{ existingRows|tojson|safe }};
+  const table_name = {{ table_name|tojson|safe }};
+
+  // Function to create table headers
+  function createTableHeaders() {
+    const table = document.getElementById('editTable');
+    const headerRow = table.insertRow();
+
+    columns.forEach(column => {
+      const headerCell = headerRow.insertCell();
+      headerCell.textContent = column.name;
+    });
+
+    const actionCell = headerRow.insertCell();
+    actionCell.textContent = 'Actions';
+  }
+
+  // Function to create and populate table rows
+  function populateTable() {
+    const table = document.getElementById('editTable');
+
+    existingRows.forEach((row, rowIndex) => {
+      const newRow = table.insertRow();
+
+      row.forEach((cell, cellIndex) => {
+        const newCell = newRow.insertCell();
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = cell;
+        newCell.appendChild(input);
+      });
+
+      const deleteCell = newRow.insertCell();
+      const deleteBtn = document.createElement('span');
+      deleteBtn.classList.add('delete-btn');
+      deleteBtn.classList.add('btn');
+      deleteBtn.classList.add('btn-danger');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.onclick = function() {
+        deleteRow(this.closest('tr').rowIndex);
+      };
+      deleteCell.appendChild(deleteBtn);
+    });
+  }
+
+  // Function to delete a row
+  function deleteRow(rowIndex) {
+    const table = document.getElementById('editTable');
+    table.deleteRow(rowIndex);
+  }
+
+  // Function to add a new empty row
+  function addEmptyRow() {
+    const table = document.getElementById('editTable');
+    const newRow = table.insertRow();
+
+    columns.forEach(() => {
+      const newCell = newRow.insertCell();
+      const input = document.createElement('input');
+      input.type = 'text';
+      newCell.appendChild(input);
+    });
+
+    const deleteCell = newRow.insertCell();
+    const deleteBtn = document.createElement('span');
+    deleteBtn.classList.add('delete-btn');
+    deleteBtn.classList.add('btn');
+    deleteBtn.classList.add('btn-danger');
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = function() {
+      deleteRow(this.closest('tr').rowIndex);
+    };
+    deleteCell.appendChild(deleteBtn);
+  }
+
+  function saveRows() {
+    const table = document.getElementById('editTable');
+    const rows = [];
+
+    // Iterate through each row and gather values
+    for (let i = 1; i < table.rows.length; i++) {
+      const row = [];
+      for (let j = 0; j < columns.length; j++) {
+        row.push(table.rows[i].cells[j].querySelector('input').value);
+      }
+      rows.push(row);
+    }
+
+    // Make an AJAX request to save_rows endpoint
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/save_rows', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        console.log('Rows saved successfully');
+        alert('Values saved successfully');
+      }
+    };
+    xhr.send(JSON.stringify({table_name: table_name, rows: rows }));
+  }
+
+  // Call the functions to set up the table
+  createTableHeaders();
+  populateTable();
+
+  // Add button to add a new empty row
+  const addButton = document.createElement('button');
+  addButton.textContent = 'Add New Row';
+  addButton.onclick = addEmptyRow;
+  addButton.classList.add('btn');
+  addButton.classList.add('btn-primary');
+  addButton.classList.add('mt-4');
+  const container = document.getElementById('container');
+  container.appendChild(addButton);
+</script>
+
+</body>
+</html>

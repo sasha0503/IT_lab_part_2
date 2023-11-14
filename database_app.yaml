@@ -1,0 +1,155 @@
+openapi: 3.0.0
+info:
+  title: Your Flask App
+  version: 1.0.0
+paths:
+  /:
+    get:
+      summary: Get index
+      responses:
+        '200':
+          description: Successful response
+  /get_table/{table_name}:
+    get:
+      summary: Get table page
+      parameters:
+        - in: path
+          name: table_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+  /del_table/{table_name}:
+    delete:
+      summary: Delete table from data base
+      parameters:
+        - in: path
+          name: table_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+  /edit_table/{table_name}:
+    get:
+      summary: Get the page for editing the columns of a table
+      parameters:
+        - in: path
+          name: table_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+  /edit_rows/{table_name}:
+    get:
+      summary: Get the page for editing the rows of a table
+      parameters:
+        - in: path
+          name: table_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+  /save_edit/{table_name}:
+    post:
+      summary: Save columns edits
+      parameters:
+        - in: path
+          name: table_name
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                columns:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      type:
+                        type: string
+      responses:
+        '200':
+          description: Successful response
+  /save_rows:
+    post:
+      summary: Save rows edits
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                table_name:
+                  type: string
+                rows:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: string
+      responses:
+        '200':
+          description: Successful response
+  /add_table/{table_name}:
+    post:
+      summary: Add table to the data base
+      parameters:
+        - in: path
+          name: table_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+  /json_table/{table_name}:
+    get:
+      summary: Get JSON representation of a table
+      parameters:
+        - in: path
+          name: table_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+  /search/{table_name}:
+    post:
+      summary: Search in a table by filtering rows
+      parameters:
+        - in: path
+          name: table_name
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties: 
+                column_name_1:
+                  type: string
+                column_name_2:
+                  type: string
+      responses:
+        '200':
+          description: Successful response

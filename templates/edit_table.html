@@ -1,0 +1,140 @@
+<!-- templates/app.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ table_name }} edit</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+</head>
+<body>
+<a class="btn btn-primary ml-4 mt-4" href="{{ url_for('get_table', table_name=table_name) }}"> Back </a>
+<div class="container mt-4">
+
+    <h1>Table "{{ table_name }}"</h1>
+
+    <!-- Form for adding columns -->
+    <form id="addColumnForm">
+        <div class="form-row">
+            <div class="col">
+                <label for="columnName">Column Name:</label>
+                <input type="text" class="form-control" id="columnName" placeholder="Enter column name">
+            </div>
+            <div class="col">
+                <label for="columnType">Column Type:</label>
+                <select class="form-control" id="columnType">
+                    <option value="int">Int</option>
+                    <option value="float">Float</option>
+                    <option value="char">Char</option>
+                    <option value="string">String</option>
+                </select>
+            </div>
+        </div>
+        <button type="button" class="btn btn-success mt-2" onclick="addColumn()">Add Column</button>
+    </form>
+
+    <!-- Display added columns -->
+    <div id="addedColumns" class="mt-4">
+        {% for column in columns %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {{ column.name }} ({{ column.type }})
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"
+                        onclick="deleteColumn(this)">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+    <button type="button" class="btn btn-primary mt-4" onclick="saveEdit()">Save</button>
+
+
+</div>
+
+<!-- Bootstrap JS and dependencies (optional) -->
+<!-- Add the following lines if you need Bootstrap JavaScript features -->
+<!-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script> -->
+<!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script> -->
+
+<!-- Your custom JavaScript -->
+<script>
+    function addColumn() {
+        // Get column name and type from the form
+        var columnName = document.getElementById('columnName').value;
+        var columnType = document.getElementById('columnType').value;
+
+        // Create a new column element
+        var newColumn = document.createElement('div');
+        newColumn.innerHTML = `
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                ${columnName} (${columnType})
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close" onclick="deleteColumn(this)">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+
+        // Append the new column element to the addedColumns div
+        document.getElementById('addedColumns').appendChild(newColumn);
+
+        // Clear the input fields
+        document.getElementById('columnName').value = '';
+        document.getElementById('columnType').value = 'int';
+    }
+
+    function deleteColumn(button) {
+        // Remove the parent column element when the delete button is clicked
+        var columnElement = button.parentElement;
+        columnElement.parentElement.removeChild(columnElement);
+    }
+
+    function saveEdit() {
+        // Gather data to be sent to the server (columns, etc.)
+        var formData = {
+            columns: []
+        };
+
+        // Extract column information from the addedColumns div
+        var columnElements = document.getElementById('addedColumns').getElementsByClassName('alert-info');
+        for (var i = 0; i < columnElements.length; i++) {
+            var columnText = columnElements[i].innerText.trim();
+            if (!columnText || columnText.length === 0 ) {
+                alert('Column name cannot be empty');
+                return;
+            }
+            var matches = columnText.match(/(.+) \((.+)\)/);
+            if (matches && matches.length === 3) {
+                formData.columns.push({ name: matches[1], type: matches[2] });
+            }
+        }
+
+        // Make an AJAX request to the save_edit endpoint
+        fetch('/save_edit/{{ table_name }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                    // Add any additional headers if needed
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(function (response) {
+                // Handle the response (you can customize this part)
+                if (response.ok) {
+                console.log('Edit saved successfully');
+                alert('Edit saved successfully');
+                } else {
+                    console.error('Failed to save edit');
+                    // Handle the error or provide feedback to the user
+                }
+            })
+            .catch(function (error) {
+                console.error('Error:', error);
+                // Handle the error or provide feedback to the user
+            });
+        }
+</script>
+</body>
+</html>

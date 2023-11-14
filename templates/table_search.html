@@ -1,0 +1,58 @@
+<!-- templates/app.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ table_name }}</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+</head>
+<body>
+    <a class="btn btn-primary ml-4 mt-4" href="{{ url_for('index') }}"> Back to DB </a>
+<div class="container mt-4">
+
+    <h1>Table "{{ table_name }}"</h1>
+    <a class="btn btn-primary mb-1" href="{{ url_for('edit_table', table_name=table_name) }}"> Edit columns </a>
+    <a class="btn btn-primary mb-1 ml-2" href="{{ url_for('edit_rows', table_name=table_name) }}"> Set values </a>
+    {% if columns %}
+
+        <form method="POST" action="/search/{{ table_name }}">
+            <h2>Search</h2>
+            {% for column in columns %}
+                <div class="form-group">
+                    <label for="{{ column.name }}">{{ column.name }}:</label>
+                    <input type="text" class="form-control" name="{{ column.name }}"
+                           value="{{ request.form[column.name] }}">
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <h2 class="mt-4">Results</h2>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                {% for column in columns %}
+                    <th>{{ column.name }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    {% for value in row.values %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <h2>Table is empty</h2>
+    {% endif %}
+</div>
+</body>
+</html>
