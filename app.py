@@ -1,4 +1,6 @@
+import graphene
 from flask import Flask, render_template, request, jsonify
+from flask_graphql import GraphQLView
 
 from classes import Table, Column, Row
 from custom_logger import logger
@@ -7,6 +9,60 @@ from utils import load_db_from_request, save_db_to_file
 app = Flask(__name__)
 
 logger.debug("############# starting app")
+
+
+class ColumnType(graphene.ObjectType):
+    name = graphene.String()
+    type = graphene.String()
+
+
+class RowType(graphene.ObjectType):
+    values = graphene.List(graphene.String)
+
+
+class TableType(graphene.ObjectType):
+    name = graphene.String()
+    columns = graphene.List(ColumnType)
+    rows = graphene.List(RowType)
+    search_filter = graphene.JSONString()
+
+    def resolve_columns(self, info):
+        # Assuming you have a 'columns' attribute in your Table class
+        return [{'name': col.name, 'type': col.type} for col in self.columns]
+
+    def resolve_rows(self, info):
+        # Assuming you have a 'rows' attribute in your Table class
+        return [{'values': row.values} for row in self.rows]
+
+
+class Query(graphene.ObjectType):
+    table = graphene.Field(TableType, name=graphene.String(), search_filter=graphene.JSONString())
+    tables = graphene.List(TableType)
+    search = graphene.List(TableType, name=graphene.String())
+
+    def resolve_table(self, info, name, search_filter=None):
+        db = load_db_from_request(request)
+        table = db.get_table(name)
+        if search_filter is None:
+            return table
+        else:
+            filter_list = [None for _ in table.columns]
+            for i, col in enumerate(table.columns):
+                filter_list[i] = search_filter.get(col.name)
+            logger.debug(f"filter_list: {filter_list}")
+            filtered_rows = table.search(filter_list)
+            new_table = Table(name)
+            new_table.columns = table.columns
+            new_table.rows = filtered_rows
+            return new_table
+
+    def resolve_tables(self, info):
+        db = load_db_from_request(request)
+        return db.list_tables()
+
+
+schema = graphene.Schema(query=Query)
+app.add_url_rule('/graphql', view_func=GraphQLView.as_view('graphql', schema=schema, graphiql=True))
 
 
 @app.route('/')
