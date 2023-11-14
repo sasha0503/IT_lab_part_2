@@ -1,12 +1,14 @@
 import graphene
 from flask import Flask, render_template, request, jsonify
 from flask_graphql import GraphQLView
+from flask_cors import CORS
 
 from classes import Table, Column, Row
 from custom_logger import logger
 from utils import load_db_from_request, save_db_to_file
 
 app = Flask(__name__)
+CORS(app)
 
 logger.debug("############# starting app")
 
@@ -181,5 +183,21 @@ def search(table_name):
     return render_template('table_search.html', table_name=table_name, rows=filtered_rows, columns=table.columns)
 
 
+@app.route('/json_search/<table_name>', methods=['GET', 'POST'])
+def json_search(table_name):
+    db = load_db_from_request(request)
+    logger.debug(f"POST search in db '{db.name}'")
+    table = db.get_table(table_name)
+    filter_list = [None for _ in table.columns]
+    for i, col in enumerate(table.columns):
+        filter_list[i] = request.form.get(col.name) or None
+    logger.debug(f"filter_list: {filter_list}")
+    filtered_rows = table.search(filter_list)
+    res_table = Table(table_name)
+    res_table.columns = table.columns
+    res_table.rows = filtered_rows
+    return jsonify(res_table.to_json())
+
+
 if __name__ == '__main__':
-    app.run(debug=True, host='localhost', port=5050)
+    app.run(debug=True, host='localhost', port=5000)
